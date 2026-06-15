@@ -1,0 +1,49 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id                   Int                   @id @default(autoincrement())
+  name                 String
+  email                String                @unique
+  password             String
+  phone                String?
+  department           String?
+  role                 Role                  @default(EMPLOYEE)
+  assignedCash         PetitCashAssignment[] @relation("AssignedTo")
+  assignmentsMade      PetitCashAssignment[] @relation("AssignedBy")
+  payments             Payment[]
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+}
+
+enum Role {
+  EMPLOYEE
+  ACCOUNTANT
+}
+
+model PetitCashAssignment {
+  id             Int      @id @default(autoincrement())
+  amount         Float
+  assignedToId   Int
+  assignedTo     User     @relation("AssignedTo", fields: [assignedToId], references: [id])
+  assignedById   Int
+  assignedBy     User     @relation("AssignedBy", fields: [assignedById], references: [id])
+  createdAt      DateTime @default(now())
+}
+
+model Payment {
+  id             Int      @id @default(autoincrement())
+  vendorNumber   String
+  amount         Float
+  reason         String
+  images         String[] // Array of local paths or URLs
+  employeeId     Int
+  employee       User     @relation(fields: [employeeId], references: [id])
+  createdAt      DateTime @default(now())
+}
