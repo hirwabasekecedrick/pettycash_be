@@ -4,42 +4,76 @@ import { AuthRequest } from '../middleware/auth';
 
 export const submitPayment = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { vendorNumber, amount, reason } = req.body;
+    const { vendorNumber, amount, reason, assignmentId, budgetItemName } = req.body;
     const employeeId = req.user!.id;
-    
+    const idempotencyKey = req.header('Idempotency-Key');
+
+    if (idempotencyKey) {
+      const existingPayment = await prisma.payment.findUnique({
+        where: { idempotencyKey }
+      });
+      if (existingPayment) {
+        res.status(200).json(existingPayment);
+        return;
+      }
+    }
+
+    if (!assignmentId) {
+      res.status(400).json({ error: 'assignmentId is required' });
+      return;
+    }
+
     const files = req.files as Express.Multer.File[];
     const images = files ? files.map(file => `/uploads/${file.filename}`) : [];
 
     const paymentAmount = Number(amount);
 
-    // Check balance
-    const assignments = await prisma.petitCashAssignment.aggregate({
-      where: { assignedToId: employeeId },
-      _sum: { amount: true }
+    // Get the specific assignment to check balance
+    const assignment = await prisma.petitCashAssignment.findUnique({
+      where: { id: Number(assignmentId) }
     });
-    const totalAssigned = assignments._sum.amount || 0;
 
-    const existingPayments = await prisma.payment.aggregate({
-      where: { employeeId: employeeId },
-      _sum: { amount: true }
-    });
-    const totalSpent = existingPayments._sum.amount || 0;
-
-    if (totalAssigned - totalSpent < paymentAmount) {
-      res.status(400).json({ error: 'Insufficient balance to make this payment.' });
+    if (!assignment || assignment.assignedToId !== employeeId) {
+      res.status(403).json({ error: 'Invalid or unauthorized assignment' });
       return;
     }
 
+    const existingPayments = await prisma.payment.aggregate({
+      where: { assignmentId: assignment.id },
+      _sum: { amount: true }
+    });
+    const totalSpent = existingPayments._sum?.amount || 0;
+
+    if (assignment.amount - totalSpent < paymentAmount) {
+      res.status(400).json({ error: 'Insufficient balance in this allocation to make the payment.' });
+      return;
+    }
+
+    const paymentData: any = {
+      vendorNumber,
+      amount: paymentAmount,
+      reason,
+      images,
+      idempotencyKey,
+      employeeId,
+      assignmentId: assignment.id
+    };
+
+    if (budgetItemName && budgetItemName.trim() !== '') {
+      paymentData.budgetItem = {
+        connectOrCreate: {
+          where: { name: budgetItemName.trim() },
+          create: { name: budgetItemName.trim() }
+        }
+      };
+    }
+
     const payment = await prisma.payment.create({
-      data: {
-        vendorNumber,
-        amount: paymentAmount,
-        reason,
-        images,
-        employeeId
-      },
+      data: paymentData,
       include: {
-        employee: { select: { name: true, email: true } }
+        employee: { select: { name: true, email: true } },
+        assignment: true,
+        budgetItem: true
       }
     });
 

@@ -4,7 +4,7 @@ import { AuthRequest } from '../middleware/auth';
 
 export const createAssignment = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { amount, assignedToId } = req.body;
+    const { amount, assignedToId, authorizedItems } = req.body;
     const assignedById = req.user!.id; // from auth middleware
 
     const assignment = await prisma.petitCashAssignment.create({
@@ -12,9 +12,16 @@ export const createAssignment = async (req: AuthRequest, res: Response): Promise
         amount: Number(amount),
         assignedToId: Number(assignedToId),
         assignedById,
+        authorizedItems: {
+          connectOrCreate: (authorizedItems as string[] || []).map(name => ({
+            where: { name },
+            create: { name }
+          }))
+        }
       },
       include: {
-        assignedTo: { select: { name: true, email: true } }
+        assignedTo: { select: { name: true, email: true } },
+        authorizedItems: true
       }
     });
 
@@ -36,7 +43,8 @@ export const getAssignments = async (req: AuthRequest, res: Response): Promise<v
       where: whereClause,
       include: {
         assignedTo: { select: { name: true, email: true } },
-        assignedBy: { select: { name: true } }
+        assignedBy: { select: { name: true } },
+        authorizedItems: true
       },
       orderBy: { createdAt: 'desc' }
     });

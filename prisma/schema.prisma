@@ -28,13 +28,25 @@ enum Role {
 }
 
 model PetitCashAssignment {
-  id             Int      @id @default(autoincrement())
-  amount         Float
-  assignedToId   Int
-  assignedTo     User     @relation("AssignedTo", fields: [assignedToId], references: [id])
-  assignedById   Int
-  assignedBy     User     @relation("AssignedBy", fields: [assignedById], references: [id])
-  createdAt      DateTime @default(now())
+  id              Int          @id @default(autoincrement())
+  amount          Float
+  assignedToId    Int
+  assignedTo      User         @relation("AssignedTo", fields: [assignedToId], references: [id])
+  assignedById    Int
+  assignedBy      User         @relation("AssignedBy", fields: [assignedById], references: [id])
+  
+  authorizedItems BudgetItem[]
+  payments        Payment[]
+
+  createdAt       DateTime     @default(now())
+}
+
+model BudgetItem {
+  id              Int                   @id @default(autoincrement())
+  name            String                @unique
+  assignments     PetitCashAssignment[]
+  payments        Payment[]
+  createdAt       DateTime              @default(now())
 }
 
 model Payment {
@@ -43,7 +55,16 @@ model Payment {
   amount         Float
   reason         String
   images         String[] // Array of local paths or URLs
+  idempotencyKey String?  @unique
+  
   employeeId     Int
   employee       User     @relation(fields: [employeeId], references: [id])
+  
+  assignmentId   Int
+  assignment     PetitCashAssignment @relation(fields: [assignmentId], references: [id])
+  
+  budgetItemId   Int?
+  budgetItem     BudgetItem? @relation(fields: [budgetItemId], references: [id])
+
   createdAt      DateTime @default(now())
 }
