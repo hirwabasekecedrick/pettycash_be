@@ -36,14 +36,25 @@ export const getAssignments = async (req: AuthRequest, res: Response): Promise<v
   try {
     const { id, role } = req.user!;
     const mineOnly = req.query.mine === 'true';
+    const month = req.query.month as string;
 
     // ?mine=true  → always filter to the caller's own assignments (used by payments page)
     // ACCOUNTANT without ?mine → see all assignments
     // EMPLOYEE (any) → always see only their own
-    const whereClause =
+    const whereClause: any =
       mineOnly || role !== 'ACCOUNTANT'
         ? { assignedToId: id }
         : {};
+
+    if (month && /^\d{4}-\d{2}$/.test(month)) {
+      const [yearStr, monthStr] = month.split('-');
+      const startOfMonth = new Date(Number(yearStr), Number(monthStr) - 1, 1);
+      const endOfMonth = new Date(Number(yearStr), Number(monthStr), 1);
+      whereClause.createdAt = {
+        gte: startOfMonth,
+        lt: endOfMonth
+      };
+    }
 
     const assignments = await prisma.petitCashAssignment.findMany({
       where: whereClause,
