@@ -35,9 +35,15 @@ export const createAssignment = async (req: AuthRequest, res: Response): Promise
 export const getAssignments = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { id, role } = req.user!;
-    
-    // If accountant, view all. If employee, view own.
-    const whereClause = role === 'ACCOUNTANT' ? {} : { assignedToId: id };
+    const mineOnly = req.query.mine === 'true';
+
+    // ?mine=true  → always filter to the caller's own assignments (used by payments page)
+    // ACCOUNTANT without ?mine → see all assignments
+    // EMPLOYEE (any) → always see only their own
+    const whereClause =
+      mineOnly || role !== 'ACCOUNTANT'
+        ? { assignedToId: id }
+        : {};
 
     const assignments = await prisma.petitCashAssignment.findMany({
       where: whereClause,

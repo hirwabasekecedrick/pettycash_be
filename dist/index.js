@@ -26,7 +26,11 @@ const limiter = (0, express_rate_limit_1.default)({
     message: { error: 'Too many requests, please try again later.' }
 });
 app.use('/api/', limiter);
-app.use((0, cors_1.default)({ origin: true, credentials: true }));
+app.use((0, cors_1.default)({
+    origin: true,
+    credentials: true,
+    allowedHeaders: ['Content-Type', 'Authorization', 'Idempotency-Key'],
+}));
 app.use(express_1.default.json());
 app.use('/api/auth', auth_1.default);
 app.use('/api/employees', employees_1.default);
@@ -38,7 +42,7 @@ app.use('/uploads', express_1.default.static(path_1.default.join(__dirname, '../
 app.get('/', (req, res) => {
     res.send('Petty Cash API running');
 });
-const PORT = process.env.PORT || 4000;
-app.listen(PORT, () => {
-    console.log(`✅ Server running on http://localhost:${PORT}`);
+const PORT = Number(process.env.PORT) || 4000;
+app.listen(PORT, "0.0.0.0", () => {
+    console.log(`✅ Server running on port ${PORT}`);
 });

@@ -28,7 +28,11 @@ const limiter = rateLimit({
 });
 app.use('/api/', limiter);
 
-app.use(cors({ origin: true, credentials: true }));
+app.use(cors({
+  origin: true,
+  credentials: true,
+  allowedHeaders: ['Content-Type', 'Authorization', 'Idempotency-Key'],
+}));
 app.use(express.json());
 
 app.use('/api/auth', authRoutes);
