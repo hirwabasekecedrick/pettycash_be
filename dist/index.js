@@ -18,7 +18,16 @@ const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 // Security middlewares
-app.use((0, helmet_1.default)());
+app.use((0, helmet_1.default)({
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+    contentSecurityPolicy: false,
+}));
+app.use((0, cors_1.default)({
+    origin: true,
+    credentials: true,
+    allowedHeaders: ['Content-Type', 'Authorization', 'Idempotency-Key'],
+}));
+app.use(express_1.default.json());
 // Rate Limiting (e.g., 100 requests per 15 minutes)
 const limiter = (0, express_rate_limit_1.default)({
     windowMs: 15 * 60 * 1000,
@@ -26,12 +35,6 @@ const limiter = (0, express_rate_limit_1.default)({
     message: { error: 'Too many requests, please try again later.' }
 });
 app.use('/api/', limiter);
-app.use((0, cors_1.default)({
-    origin: true,
-    credentials: true,
-    allowedHeaders: ['Content-Type', 'Authorization', 'Idempotency-Key'],
-}));
-app.use(express_1.default.json());
 app.use('/api/auth', auth_1.default);
 app.use('/api/employees', employees_1.default);
 app.use('/api/assignments', assignments_1.default);

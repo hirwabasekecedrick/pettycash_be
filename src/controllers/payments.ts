@@ -49,24 +49,26 @@ export const submitPayment = async (req: AuthRequest, res: Response): Promise<vo
       return;
     }
 
+    let budgetItemId: number | undefined;
+    if (budgetItemName && budgetItemName.trim() !== '') {
+      const bItem = await prisma.budgetItem.upsert({
+        where: { name: budgetItemName.trim() },
+        update: {},
+        create: { name: budgetItemName.trim() }
+      });
+      budgetItemId = bItem.id;
+    }
+
     const paymentData: any = {
       vendorNumber,
       amount: paymentAmount,
-      reason,
+      reason: reason || "",
       images,
       idempotencyKey,
       employeeId,
-      assignmentId: assignment.id
+      assignmentId: assignment.id,
+      ...(budgetItemId ? { budgetItemId } : {})
     };
-
-    if (budgetItemName && budgetItemName.trim() !== '') {
-      paymentData.budgetItem = {
-        connectOrCreate: {
-          where: { name: budgetItemName.trim() },
-          create: { name: budgetItemName.trim() }
-        }
-      };
-    }
 
     const payment = await prisma.payment.create({
       data: paymentData,
@@ -87,8 +89,19 @@ export const submitPayment = async (req: AuthRequest, res: Response): Promise<vo
 export const getPayments = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { id, role } = req.user!;
+    const month = req.query.month as string;
     
-    const whereClause = role === 'ACCOUNTANT' ? {} : { employeeId: id };
+    const whereClause: any = role === 'ACCOUNTANT' ? {} : { employeeId: id };
+
+    if (month && /^\d{4}-\d{2}$/.test(month)) {
+      const [yearStr, monthStr] = month.split('-');
+      const startOfMonth = new Date(Number(yearStr), Number(monthStr) - 1, 1);
+      const endOfMonth = new Date(Number(yearStr), Number(monthStr), 1);
+      whereClause.createdAt = {
+        gte: startOfMonth,
+        lt: endOfMonth
+      };
+    }
 
     const payments = await prisma.payment.findMany({
       where: whereClause,

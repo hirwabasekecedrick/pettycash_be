@@ -53,7 +53,7 @@ model Payment {
   id             Int      @id @default(autoincrement())
   vendorNumber   String
   amount         Float
-  reason         String
+  reason         String?
   images         String[] // Array of local paths or URLs
   idempotencyKey String?  @unique
   

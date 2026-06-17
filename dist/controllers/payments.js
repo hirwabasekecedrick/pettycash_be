@@ -43,23 +43,25 @@ const submitPayment = async (req, res) => {
             res.status(400).json({ error: 'Insufficient balance in this allocation to make the payment.' });
             return;
         }
+        let budgetItemId;
+        if (budgetItemName && budgetItemName.trim() !== '') {
+            const bItem = await prisma_1.default.budgetItem.upsert({
+                where: { name: budgetItemName.trim() },
+                update: {},
+                create: { name: budgetItemName.trim() }
+            });
+            budgetItemId = bItem.id;
+        }
         const paymentData = {
             vendorNumber,
             amount: paymentAmount,
-            reason,
+            reason: reason || "",
             images,
             idempotencyKey,
             employeeId,
-            assignmentId: assignment.id
+            assignmentId: assignment.id,
+            ...(budgetItemId ? { budgetItemId } : {})
         };
-        if (budgetItemName && budgetItemName.trim() !== '') {
-            paymentData.budgetItem = {
-                connectOrCreate: {
-                    where: { name: budgetItemName.trim() },
-                    create: { name: budgetItemName.trim() }
-                }
-            };
-        }
         const payment = await prisma_1.default.payment.create({
             data: paymentData,
             include: {
@@ -79,7 +81,17 @@ exports.submitPayment = submitPayment;
 const getPayments = async (req, res) => {
     try {
         const { id, role } = req.user;
+        const month = req.query.month;
         const whereClause = role === 'ACCOUNTANT' ? {} : { employeeId: id };
+        if (month && /^\d{4}-\d{2}$/.test(month)) {
+            const [yearStr, monthStr] = month.split('-');
+            const startOfMonth = new Date(Number(yearStr), Number(monthStr) - 1, 1);
+            const endOfMonth = new Date(Number(yearStr), Number(monthStr), 1);
+            whereClause.createdAt = {
+                gte: startOfMonth,
+                lt: endOfMonth
+            };
+        }
         const payments = await prisma_1.default.payment.findMany({
             where: whereClause,
             include: {

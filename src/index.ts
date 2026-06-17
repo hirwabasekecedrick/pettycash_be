@@ -18,7 +18,17 @@ dotenv.config();
 const app = express();
 
 // Security middlewares
-app.use(helmet());
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+  contentSecurityPolicy: false,
+}));
+
+app.use(cors({
+  origin: true,
+  credentials: true,
+  allowedHeaders: ['Content-Type', 'Authorization', 'Idempotency-Key'],
+}));
+app.use(express.json());
 
 // Rate Limiting (e.g., 100 requests per 15 minutes)
 const limiter = rateLimit({
@@ -27,13 +37,6 @@ const limiter = rateLimit({
   message: { error: 'Too many requests, please try again later.' }
 });
 app.use('/api/', limiter);
-
-app.use(cors({
-  origin: true,
-  credentials: true,
-  allowedHeaders: ['Content-Type', 'Authorization', 'Idempotency-Key'],
-}));
-app.use(express.json());
 
 app.use('/api/auth', authRoutes);
 app.use('/api/employees', employeeRoutes);
