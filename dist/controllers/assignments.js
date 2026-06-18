@@ -12,7 +12,7 @@ const createAssignment = async (req, res) => {
         const assignment = await prisma_1.default.petitCashAssignment.create({
             data: {
                 amount: Number(amount),
-                assignedToId: Number(assignedToId),
+                assignedToId: assignedToId,
                 assignedById,
                 authorizedItems: {
                     connectOrCreate: (authorizedItems || []).map(name => ({
@@ -45,16 +45,7 @@ const getAssignments = async (req, res) => {
         const whereClause = mineOnly || role !== 'ACCOUNTANT'
             ? { assignedToId: id }
             : {};
-        if (month && /^\d{4}-\d{2}$/.test(month)) {
-            const [yearStr, monthStr] = month.split('-');
-            const startOfMonth = new Date(Number(yearStr), Number(monthStr) - 1, 1);
-            const endOfMonth = new Date(Number(yearStr), Number(monthStr), 1);
-            whereClause.createdAt = {
-                gte: startOfMonth,
-                lt: endOfMonth
-            };
-        }
-        const assignments = await prisma_1.default.petitCashAssignment.findMany({
+        let assignments = await prisma_1.default.petitCashAssignment.findMany({
             where: whereClause,
             include: {
                 assignedTo: { select: { name: true, email: true } },
@@ -63,6 +54,16 @@ const getAssignments = async (req, res) => {
             },
             orderBy: { createdAt: 'desc' }
         });
+        // Apply month filter in JS (PrismaPg v7 adapter silently drops Date objects in where clauses)
+        if (month && /^\d{4}-\d{2}$/.test(month)) {
+            const [yearStr, monthStr] = month.split('-');
+            const startOfMonth = new Date(Date.UTC(Number(yearStr), Number(monthStr) - 1, 1));
+            const endOfMonth = new Date(Date.UTC(Number(yearStr), Number(monthStr), 1));
+            assignments = assignments.filter(a => {
+                const created = new Date(a.createdAt);
+                return created >= startOfMonth && created < endOfMonth;
+            });
+        }
         res.json(assignments);
     }
     catch (error) {

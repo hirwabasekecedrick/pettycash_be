@@ -9,6 +9,7 @@ import assignmentRoutes from './routes/assignments';
 import paymentRoutes from './routes/payments';
 import dashboardRoutes from './routes/dashboard';
 import budgetItemRoutes from './routes/budgetItems';
+import themeRoutes from './routes/theme';
 
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
@@ -44,6 +45,7 @@ app.use('/api/assignments', assignmentRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/budget-items', budgetItemRoutes);
+app.use('/api/theme', themeRoutes);
 
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 

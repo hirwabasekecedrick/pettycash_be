@@ -23,14 +23,14 @@ export const submitPayment = async (req: AuthRequest, res: Response): Promise<vo
       return;
     }
 
-    const files = req.files as Express.Multer.File[];
-    const images = files ? files.map(file => `/uploads/${file.filename}`) : [];
+    const files = (req as any).files;
+    const images = files ? files.map((file: any) => `/uploads/${file.filename}`) : [];
 
     const paymentAmount = Number(amount);
 
     // Get the specific assignment to check balance
     const assignment = await prisma.petitCashAssignment.findUnique({
-      where: { id: Number(assignmentId) }
+      where: { id: assignmentId }
     });
 
     if (!assignment || assignment.assignedToId !== employeeId) {
@@ -49,7 +49,7 @@ export const submitPayment = async (req: AuthRequest, res: Response): Promise<vo
       return;
     }
 
-    let budgetItemId: number | undefined;
+    let budgetItemId: string | undefined;
     if (budgetItemName && budgetItemName.trim() !== '') {
       const bItem = await prisma.budgetItem.upsert({
         where: { name: budgetItemName.trim() },
@@ -90,26 +90,37 @@ export const getPayments = async (req: AuthRequest, res: Response): Promise<void
   try {
     const { id, role } = req.user!;
     const month = req.query.month as string;
-    
-    const whereClause: any = role === 'ACCOUNTANT' ? {} : { employeeId: id };
+    const whereClause: any = role === 'ACCOUNTANT'
+  ? {}
+  : { employeeId: id };
 
-    if (month && /^\d{4}-\d{2}$/.test(month)) {
-      const [yearStr, monthStr] = month.split('-');
-      const startOfMonth = new Date(Number(yearStr), Number(monthStr) - 1, 1);
-      const endOfMonth = new Date(Number(yearStr), Number(monthStr), 1);
-      whereClause.createdAt = {
-        gte: startOfMonth,
-        lt: endOfMonth
-      };
-    }
-
-    const payments = await prisma.payment.findMany({
-      where: whereClause,
-      include: {
-        employee: { select: { name: true, email: true, department: true } }
+let payments = await prisma.payment.findMany({
+  where: whereClause,
+  include: {
+    employee: {
+      select: {
+        name: true,
+        email: true,
+        department: true,
       },
-      orderBy: { createdAt: 'desc' }
-    });
+    },
+  },
+  orderBy: {
+    createdAt: 'desc',
+  },
+});
+
+// Filter by month
+if (month && /^\d{4}-\d{2}$/.test(month)) {
+  payments = payments.filter((payment) => {
+    const paymentMonth = new Date(payment.createdAt)
+      .toISOString()
+      .slice(0, 7);
+
+    return paymentMonth === month;  
+  });
+}
+
 
     res.json(payments);
   } catch (error) {

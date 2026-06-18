@@ -1,6 +1,14 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 import prisma from '../utils/prisma';
+
+const CHARSET = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%';
+
+function generatePassword(length = 12): string {
+  const bytes = crypto.randomBytes(length);
+  return Array.from(bytes, (b) => CHARSET[b % CHARSET.length]).join('');
+}
 
 export const getEmployees = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -24,15 +32,16 @@ export const getEmployees = async (req: Request, res: Response): Promise<void> =
 
 export const createEmployee = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { name, email, password, phone, department, role } = req.body;
-    
+    const { name, email, phone, department, role } = req.body;
+
     const existing = await prisma.user.findUnique({ where: { email } });
     if (existing) {
       res.status(400).json({ error: 'Email already exists' });
       return;
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const plainPassword = generatePassword();
+    const hashedPassword = await bcrypt.hash(plainPassword, 10);
     const user = await prisma.user.create({
       data: {
         name,
@@ -45,7 +54,7 @@ export const createEmployee = async (req: Request, res: Response): Promise<void>
       select: { id: true, name: true, email: true, role: true }
     });
 
-    res.status(201).json(user);
+    res.status(201).json({ ...user, generatedPassword: plainPassword });
   } catch (error) {
     console.error('Error creating employee:', error);
     res.status(500).json({ error: 'Failed to create employee' });
@@ -55,20 +64,23 @@ export const createEmployee = async (req: Request, res: Response): Promise<void>
 export const updateEmployee = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    const { name, email, phone, department, role, password } = req.body;
-    
+    const { name, email, phone, department, role, generateNewPassword } = req.body;
+
     let updateData: any = { name, email, phone, department, role };
-    if (password) {
-      updateData.password = await bcrypt.hash(password, 10);
+    let generatedPassword: string | undefined;
+
+    if (generateNewPassword) {
+      generatedPassword = generatePassword();
+      updateData.password = await bcrypt.hash(generatedPassword, 10);
     }
 
     const user = await prisma.user.update({
-      where: { id: Number(id) },
+      where: { id: String(id) },
       data: updateData,
       select: { id: true, name: true, email: true, role: true }
     });
 
-    res.json(user);
+    res.json(generatedPassword ? { ...user, generatedPassword } : user);
   } catch (error) {
     console.error('Error updating employee:', error);
     res.status(500).json({ error: 'Failed to update employee' });
@@ -78,7 +90,7 @@ export const updateEmployee = async (req: Request, res: Response): Promise<void>
 export const deleteEmployee = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    await prisma.user.delete({ where: { id: Number(id) } });
+    await prisma.user.delete({ where: { id: String(id) } });
     res.json({ success: true });
   } catch (error) {
     console.error('Error deleting employee:', error);

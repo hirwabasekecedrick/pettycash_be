@@ -24,11 +24,11 @@ const submitPayment = async (req, res) => {
             return;
         }
         const files = req.files;
-        const images = files ? files.map(file => `/uploads/${file.filename}`) : [];
+        const images = files ? files.map((file) => `/uploads/${file.filename}`) : [];
         const paymentAmount = Number(amount);
         // Get the specific assignment to check balance
         const assignment = await prisma_1.default.petitCashAssignment.findUnique({
-            where: { id: Number(assignmentId) }
+            where: { id: assignmentId }
         });
         if (!assignment || assignment.assignedToId !== employeeId) {
             res.status(403).json({ error: 'Invalid or unauthorized assignment' });
@@ -82,23 +82,33 @@ const getPayments = async (req, res) => {
     try {
         const { id, role } = req.user;
         const month = req.query.month;
-        const whereClause = role === 'ACCOUNTANT' ? {} : { employeeId: id };
-        if (month && /^\d{4}-\d{2}$/.test(month)) {
-            const [yearStr, monthStr] = month.split('-');
-            const startOfMonth = new Date(Number(yearStr), Number(monthStr) - 1, 1);
-            const endOfMonth = new Date(Number(yearStr), Number(monthStr), 1);
-            whereClause.createdAt = {
-                gte: startOfMonth,
-                lt: endOfMonth
-            };
-        }
-        const payments = await prisma_1.default.payment.findMany({
+        const whereClause = role === 'ACCOUNTANT'
+            ? {}
+            : { employeeId: id };
+        let payments = await prisma_1.default.payment.findMany({
             where: whereClause,
             include: {
-                employee: { select: { name: true, email: true, department: true } }
+                employee: {
+                    select: {
+                        name: true,
+                        email: true,
+                        department: true,
+                    },
+                },
             },
-            orderBy: { createdAt: 'desc' }
+            orderBy: {
+                createdAt: 'desc',
+            },
         });
+        // Filter by month
+        if (month && /^\d{4}-\d{2}$/.test(month)) {
+            payments = payments.filter((payment) => {
+                const paymentMonth = new Date(payment.createdAt)
+                    .toISOString()
+                    .slice(0, 7);
+                return paymentMonth === month;
+            });
+        }
         res.json(payments);
     }
     catch (error) {

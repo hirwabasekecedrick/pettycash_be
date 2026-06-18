@@ -48,7 +48,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.NullsOrder = exports.QueryMode = exports.SortOrder = exports.PaymentScalarFieldEnum = exports.BudgetItemScalarFieldEnum = exports.PetitCashAssignmentScalarFieldEnum = exports.UserScalarFieldEnum = exports.TransactionIsolationLevel = exports.ModelName = exports.AnyNull = exports.JsonNull = exports.DbNull = exports.NullTypes = exports.Decimal = void 0;
+exports.NullsOrder = exports.QueryMode = exports.SortOrder = exports.PaymentScalarFieldEnum = exports.BudgetItemScalarFieldEnum = exports.PetitCashAssignmentScalarFieldEnum = exports.UserScalarFieldEnum = exports.ThemeScalarFieldEnum = exports.TenantScalarFieldEnum = exports.TransactionIsolationLevel = exports.ModelName = exports.AnyNull = exports.JsonNull = exports.DbNull = exports.NullTypes = exports.Decimal = void 0;
 const runtime = __importStar(require("@prisma/client/runtime/index-browser"));
 exports.Decimal = runtime.Decimal;
 exports.NullTypes = {
@@ -75,6 +75,8 @@ exports.JsonNull = runtime.JsonNull;
  */
 exports.AnyNull = runtime.AnyNull;
 exports.ModelName = {
+    Tenant: 'Tenant',
+    Theme: 'Theme',
     User: 'User',
     PetitCashAssignment: 'PetitCashAssignment',
     BudgetItem: 'BudgetItem',
@@ -89,6 +91,26 @@ exports.TransactionIsolationLevel = runtime.makeStrictEnum({
     RepeatableRead: 'RepeatableRead',
     Serializable: 'Serializable'
 });
+exports.TenantScalarFieldEnum = {
+    id: 'id',
+    name: 'name',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+};
+exports.ThemeScalarFieldEnum = {
+    id: 'id',
+    tenantId: 'tenantId',
+    primaryColor: 'primaryColor',
+    secondaryColor: 'secondaryColor',
+    accentColor: 'accentColor',
+    backgroundColor: 'backgroundColor',
+    textColor: 'textColor',
+    successColor: 'successColor',
+    warningColor: 'warningColor',
+    errorColor: 'errorColor',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+};
 exports.UserScalarFieldEnum = {
     id: 'id',
     name: 'name',
@@ -97,6 +119,7 @@ exports.UserScalarFieldEnum = {
     phone: 'phone',
     department: 'department',
     role: 'role',
+    tenantId: 'tenantId',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
 };
@@ -105,11 +128,13 @@ exports.PetitCashAssignmentScalarFieldEnum = {
     amount: 'amount',
     assignedToId: 'assignedToId',
     assignedById: 'assignedById',
+    tenantId: 'tenantId',
     createdAt: 'createdAt'
 };
 exports.BudgetItemScalarFieldEnum = {
     id: 'id',
     name: 'name',
+    tenantId: 'tenantId',
     createdAt: 'createdAt'
 };
 exports.PaymentScalarFieldEnum = {
@@ -122,6 +147,7 @@ exports.PaymentScalarFieldEnum = {
     employeeId: 'employeeId',
     assignmentId: 'assignmentId',
     budgetItemId: 'budgetItemId',
+    tenantId: 'tenantId',
     createdAt: 'createdAt'
 };
 exports.SortOrder = {

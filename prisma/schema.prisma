@@ -7,19 +7,49 @@ datasource db {
   provider = "postgresql"
 }
 
+model Tenant {
+  id          String                   @id @default(uuid())
+  name        String
+  users       User[]
+  assignments PetitCashAssignment[]
+  budgetItems BudgetItem[]
+  payments    Payment[]
+  theme       Theme?
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+}
+
+model Theme {
+  id              String      @id @default(uuid())
+  tenantId        String      @unique
+  tenant          Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  primaryColor    String   @default("#0f172a")
+  secondaryColor  String   @default("#f1f5f9")
+  accentColor     String   @default("#3b82f6")
+  backgroundColor String   @default("#ffffff")
+  textColor       String   @default("#020617")
+  successColor    String   @default("#22c55e")
+  warningColor    String   @default("#eab308")
+  errorColor      String   @default("#ef4444")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
 model User {
-  id                   Int                   @id @default(autoincrement())
-  name                 String
-  email                String                @unique
-  password             String
-  phone                String?
-  department           String?
-  role                 Role                  @default(EMPLOYEE)
-  assignedCash         PetitCashAssignment[] @relation("AssignedTo")
-  assignmentsMade      PetitCashAssignment[] @relation("AssignedBy")
-  payments             Payment[]
-  createdAt            DateTime              @default(now())
-  updatedAt            DateTime              @updatedAt
+  id              String                   @id @default(uuid())
+  name            String
+  email           String                @unique
+  password        String
+  phone           String?
+  department      String?
+  role            Role                  @default(EMPLOYEE)
+  tenantId        String?
+  tenant          Tenant?               @relation(fields: [tenantId], references: [id])
+  assignedCash    PetitCashAssignment[] @relation("AssignedTo")
+  assignmentsMade PetitCashAssignment[] @relation("AssignedBy")
+  payments        Payment[]
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
 }
 
 enum Role {
@@ -28,43 +58,50 @@ enum Role {
 }
 
 model PetitCashAssignment {
-  id              Int          @id @default(autoincrement())
-  amount          Float
-  assignedToId    Int
-  assignedTo      User         @relation("AssignedTo", fields: [assignedToId], references: [id])
-  assignedById    Int
-  assignedBy      User         @relation("AssignedBy", fields: [assignedById], references: [id])
-  
+  id           String     @id @default(uuid())
+  amount       Float
+  assignedToId String
+  assignedTo   User    @relation("AssignedTo", fields: [assignedToId], references: [id])
+  assignedById String
+  assignedBy   User    @relation("AssignedBy", fields: [assignedById], references: [id])
+  tenantId     String?
+  tenant       Tenant? @relation(fields: [tenantId], references: [id])
+
   authorizedItems BudgetItem[]
   payments        Payment[]
 
-  createdAt       DateTime     @default(now())
+  createdAt DateTime @default(now())
 }
 
 model BudgetItem {
-  id              Int                   @id @default(autoincrement())
-  name            String                @unique
-  assignments     PetitCashAssignment[]
-  payments        Payment[]
-  createdAt       DateTime              @default(now())
+  id          String                   @id @default(uuid())
+  name        String                @unique
+  tenantId    String?
+  tenant      Tenant?               @relation(fields: [tenantId], references: [id])
+  assignments PetitCashAssignment[]
+  payments    Payment[]
+  createdAt   DateTime              @default(now())
 }
 
 model Payment {
-  id             Int      @id @default(autoincrement())
+  id             String      @id @default(uuid())
   vendorNumber   String
   amount         Float
   reason         String?
   images         String[] // Array of local paths or URLs
   idempotencyKey String?  @unique
-  
-  employeeId     Int
-  employee       User     @relation(fields: [employeeId], references: [id])
-  
-  assignmentId   Int
-  assignment     PetitCashAssignment @relation(fields: [assignmentId], references: [id])
-  
-  budgetItemId   Int?
-  budgetItem     BudgetItem? @relation(fields: [budgetItemId], references: [id])
 
-  createdAt      DateTime @default(now())
+  employeeId String
+  employee   User @relation(fields: [employeeId], references: [id])
+
+  assignmentId String
+  assignment   PetitCashAssignment @relation(fields: [assignmentId], references: [id])
+
+  budgetItemId String?
+  budgetItem   BudgetItem? @relation(fields: [budgetItemId], references: [id])
+
+  tenantId String?
+  tenant   Tenant? @relation(fields: [tenantId], references: [id])
+
+  createdAt DateTime @default(now())
 }

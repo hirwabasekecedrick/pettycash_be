@@ -9,43 +9,33 @@ const getDashboardStats = async (req, res) => {
     try {
         const { id, role } = req.user;
         const month = req.query.month;
-        let dateFilter = {};
+        // Parse month filter boundaries in JS
+        let startOfMonth = null;
+        let endOfMonth = null;
         if (month && /^\d{4}-\d{2}$/.test(month)) {
             const [yearStr, monthStr] = month.split('-');
-            const startOfMonth = new Date(Number(yearStr), Number(monthStr) - 1, 1);
-            const endOfMonth = new Date(Number(yearStr), Number(monthStr), 1);
-            dateFilter = {
-                createdAt: {
-                    gte: startOfMonth,
-                    lt: endOfMonth
-                }
-            };
+            startOfMonth = new Date(Date.UTC(Number(yearStr), Number(monthStr) - 1, 1));
+            endOfMonth = new Date(Date.UTC(Number(yearStr), Number(monthStr), 1));
         }
+        const inRange = (date) => {
+            if (!startOfMonth || !endOfMonth)
+                return true;
+            const d = new Date(date);
+            return d >= startOfMonth && d < endOfMonth;
+        };
         let totalAssigned = 0;
         let totalSpent = 0;
         if (role === 'ACCOUNTANT') {
-            const assignments = await prisma_1.default.petitCashAssignment.aggregate({
-                where: dateFilter,
-                _sum: { amount: true }
-            });
-            const payments = await prisma_1.default.payment.aggregate({
-                where: dateFilter,
-                _sum: { amount: true }
-            });
-            totalAssigned = assignments._sum.amount || 0;
-            totalSpent = payments._sum.amount || 0;
+            const allAssignments = await prisma_1.default.petitCashAssignment.findMany({ select: { amount: true, createdAt: true } });
+            const allPayments = await prisma_1.default.payment.findMany({ select: { amount: true, createdAt: true } });
+            totalAssigned = allAssignments.filter(a => inRange(a.createdAt)).reduce((s, a) => s + a.amount, 0);
+            totalSpent = allPayments.filter(p => inRange(p.createdAt)).reduce((s, p) => s + p.amount, 0);
         }
         else {
-            const assignments = await prisma_1.default.petitCashAssignment.aggregate({
-                where: { assignedToId: id, ...dateFilter },
-                _sum: { amount: true }
-            });
-            const payments = await prisma_1.default.payment.aggregate({
-                where: { employeeId: id, ...dateFilter },
-                _sum: { amount: true }
-            });
-            totalAssigned = assignments._sum.amount || 0;
-            totalSpent = payments._sum.amount || 0;
+            const allAssignments = await prisma_1.default.petitCashAssignment.findMany({ where: { assignedToId: id }, select: { amount: true, createdAt: true } });
+            const allPayments = await prisma_1.default.payment.findMany({ where: { employeeId: id }, select: { amount: true, createdAt: true } });
+            totalAssigned = allAssignments.filter(a => inRange(a.createdAt)).reduce((s, a) => s + a.amount, 0);
+            totalSpent = allPayments.filter(p => inRange(p.createdAt)).reduce((s, p) => s + p.amount, 0);
         }
         res.json({
             totalAssigned,

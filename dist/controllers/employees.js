@@ -5,7 +5,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteEmployee = exports.updateEmployee = exports.createEmployee = exports.getEmployees = void 0;
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
+const crypto_1 = __importDefault(require("crypto"));
 const prisma_1 = __importDefault(require("../utils/prisma"));
+const CHARSET = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%';
+function generatePassword(length = 12) {
+    const bytes = crypto_1.default.randomBytes(length);
+    return Array.from(bytes, (b) => CHARSET[b % CHARSET.length]).join('');
+}
 const getEmployees = async (req, res) => {
     try {
         const employees = await prisma_1.default.user.findMany({
@@ -29,13 +35,14 @@ const getEmployees = async (req, res) => {
 exports.getEmployees = getEmployees;
 const createEmployee = async (req, res) => {
     try {
-        const { name, email, password, phone, department, role } = req.body;
+        const { name, email, phone, department, role } = req.body;
         const existing = await prisma_1.default.user.findUnique({ where: { email } });
         if (existing) {
             res.status(400).json({ error: 'Email already exists' });
             return;
         }
-        const hashedPassword = await bcryptjs_1.default.hash(password, 10);
+        const plainPassword = generatePassword();
+        const hashedPassword = await bcryptjs_1.default.hash(plainPassword, 10);
         const user = await prisma_1.default.user.create({
             data: {
                 name,
@@ -47,7 +54,7 @@ const createEmployee = async (req, res) => {
             },
             select: { id: true, name: true, email: true, role: true }
         });
-        res.status(201).json(user);
+        res.status(201).json({ ...user, generatedPassword: plainPassword });
     }
     catch (error) {
         console.error('Error creating employee:', error);
@@ -58,17 +65,19 @@ exports.createEmployee = createEmployee;
 const updateEmployee = async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, email, phone, department, role, password } = req.body;
+        const { name, email, phone, department, role, generateNewPassword } = req.body;
         let updateData = { name, email, phone, department, role };
-        if (password) {
-            updateData.password = await bcryptjs_1.default.hash(password, 10);
+        let generatedPassword;
+        if (generateNewPassword) {
+            generatedPassword = generatePassword();
+            updateData.password = await bcryptjs_1.default.hash(generatedPassword, 10);
         }
         const user = await prisma_1.default.user.update({
-            where: { id: Number(id) },
+            where: { id: String(id) },
             data: updateData,
             select: { id: true, name: true, email: true, role: true }
         });
-        res.json(user);
+        res.json(generatedPassword ? { ...user, generatedPassword } : user);
     }
     catch (error) {
         console.error('Error updating employee:', error);
@@ -79,7 +88,7 @@ exports.updateEmployee = updateEmployee;
 const deleteEmployee = async (req, res) => {
     try {
         const { id } = req.params;
-        await prisma_1.default.user.delete({ where: { id: Number(id) } });
+        await prisma_1.default.user.delete({ where: { id: String(id) } });
         res.json({ success: true });
     }
     catch (error) {

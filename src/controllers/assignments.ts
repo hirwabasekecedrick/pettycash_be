@@ -10,7 +10,7 @@ export const createAssignment = async (req: AuthRequest, res: Response): Promise
     const assignment = await prisma.petitCashAssignment.create({
       data: {
         amount: Number(amount),
-        assignedToId: Number(assignedToId),
+        assignedToId: assignedToId,
         assignedById,
         authorizedItems: {
           connectOrCreate: (authorizedItems as string[] || []).map(name => ({
@@ -24,7 +24,7 @@ export const createAssignment = async (req: AuthRequest, res: Response): Promise
         authorizedItems: true
       }
     });
-
+    
     res.status(201).json(assignment);
   } catch (error) {
     console.error('Error creating assignment:', error);
@@ -46,17 +46,7 @@ export const getAssignments = async (req: AuthRequest, res: Response): Promise<v
         ? { assignedToId: id }
         : {};
 
-    if (month && /^\d{4}-\d{2}$/.test(month)) {
-      const [yearStr, monthStr] = month.split('-');
-      const startOfMonth = new Date(Number(yearStr), Number(monthStr) - 1, 1);
-      const endOfMonth = new Date(Number(yearStr), Number(monthStr), 1);
-      whereClause.createdAt = {
-        gte: startOfMonth,
-        lt: endOfMonth
-      };
-    }
-
-    const assignments = await prisma.petitCashAssignment.findMany({
+    let assignments = await prisma.petitCashAssignment.findMany({
       where: whereClause,
       include: {
         assignedTo: { select: { name: true, email: true } },
@@ -65,6 +55,17 @@ export const getAssignments = async (req: AuthRequest, res: Response): Promise<v
       },
       orderBy: { createdAt: 'desc' }
     });
+
+    // Apply month filter in JS (PrismaPg v7 adapter silently drops Date objects in where clauses)
+    if (month && /^\d{4}-\d{2}$/.test(month)) {
+      const [yearStr, monthStr] = month.split('-');
+      const startOfMonth = new Date(Date.UTC(Number(yearStr), Number(monthStr) - 1, 1));
+      const endOfMonth   = new Date(Date.UTC(Number(yearStr), Number(monthStr), 1));
+      assignments = assignments.filter(a => {
+        const created = new Date(a.createdAt);
+        return created >= startOfMonth && created < endOfMonth;
+      });
+    }
 
     res.json(assignments);
   } catch (error) {

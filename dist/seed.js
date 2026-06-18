@@ -8,6 +8,28 @@ const bcryptjs_1 = __importDefault(require("bcryptjs"));
 async function main() {
     const accountantPassword = await bcryptjs_1.default.hash('admin123', 10);
     const employeePassword = await bcryptjs_1.default.hash('employee123', 10);
+    // Seed default TENANT
+    const tenant = await prisma_1.default.tenant.create({
+        data: {
+            name: 'Testing Organization',
+        },
+    });
+    // Seed default THEME
+    const theme = await prisma_1.default.theme.upsert({
+        where: { tenantId: tenant.id },
+        update: {},
+        create: {
+            tenantId: tenant.id,
+            primaryColor: '#00AF54',
+            secondaryColor: '#007CBE',
+            accentColor: '#00AF54',
+            backgroundColor: '#ffffff',
+            textColor: '#020617',
+            successColor: '#22c55e',
+            warningColor: '#eab308',
+            errorColor: '#ef4444',
+        },
+    });
     // Seed ACCOUNTANT user
     const accountant = await prisma_1.default.user.upsert({
         where: { email: 'accountant@pettycash.com' },
@@ -19,6 +41,7 @@ async function main() {
             role: 'ACCOUNTANT',
             phone: '0780000001',
             department: 'Finance',
+            tenantId: tenant.id,
         },
     });
     // Seed EMPLOYEE user
@@ -32,8 +55,11 @@ async function main() {
             role: 'EMPLOYEE',
             phone: '0780000002',
             department: 'Operations',
+            tenantId: tenant.id,
         },
     });
+    console.log('✅ Seeded Tenant:', tenant.name);
+    console.log('✅ Seeded Theme for Tenant:', tenant.name);
     console.log('✅ Seeded users:');
     console.log('  ACCOUNTANT →', accountant.email, '| password: admin123');
     console.log('  EMPLOYEE   →', employee.email, '| password: employee123');
