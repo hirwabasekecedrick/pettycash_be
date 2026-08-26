@@ -17,6 +17,8 @@ const helmet_1 = __importDefault(require("helmet"));
 const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
 dotenv_1.default.config();
 const app = (0, express_1.default)();
+// Trust proxy (required when behind nginx/Docker reverse proxy)
+app.set('trust proxy', 1);
 // Security middlewares
 app.use((0, helmet_1.default)());
 // Rate Limiting (e.g., 100 requests per 15 minutes)
