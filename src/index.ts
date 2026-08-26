@@ -17,6 +17,9 @@ dotenv.config();
 
 const app = express();
 
+// Trust proxy (required when behind nginx/Docker reverse proxy)
+app.set('trust proxy', 1);
+
 // Security middlewares
 app.use(helmet());
 
