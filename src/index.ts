@@ -44,7 +44,7 @@ app.get('/', (req, res) => {
   res.send('Petty Cash API running');
 });
 
-const PORT = process.env.PORT || 4000;
+const PORT = process.env.PORT || 6002;
 
 app.listen(PORT, () => {
   console.log(`✅ Server running on http://localhost:${PORT}`);
