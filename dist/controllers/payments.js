@@ -95,6 +95,12 @@ const getPayments = async (req, res) => {
                         department: true,
                     },
                 },
+                assignment: {
+                    include: {
+                        authorizedItems: true,
+                        assignedTo: { select: { name: true } }
+                    }
+                }
             },
             orderBy: {
                 createdAt: 'desc',

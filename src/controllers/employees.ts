@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import prisma from '../utils/prisma';
+import { sendPasswordEmail } from '../utils/mailer';
 
 const CHARSET = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%';
 
@@ -53,6 +54,9 @@ export const createEmployee = async (req: Request, res: Response): Promise<void>
       },
       select: { id: true, name: true, email: true, role: true }
     });
+
+    // Send the password via email asynchronously
+    sendPasswordEmail(email, name, plainPassword);
 
     res.status(201).json({ ...user, generatedPassword: plainPassword });
   } catch (error) {

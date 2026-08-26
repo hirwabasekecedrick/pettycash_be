@@ -7,6 +7,7 @@ exports.deleteEmployee = exports.updateEmployee = exports.createEmployee = expor
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const crypto_1 = __importDefault(require("crypto"));
 const prisma_1 = __importDefault(require("../utils/prisma"));
+const mailer_1 = require("../utils/mailer");
 const CHARSET = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%';
 function generatePassword(length = 12) {
     const bytes = crypto_1.default.randomBytes(length);
@@ -54,6 +55,8 @@ const createEmployee = async (req, res) => {
             },
             select: { id: true, name: true, email: true, role: true }
         });
+        // Send the password via email asynchronously
+        (0, mailer_1.sendPasswordEmail)(email, name, plainPassword);
         res.status(201).json({ ...user, generatedPassword: plainPassword });
     }
     catch (error) {

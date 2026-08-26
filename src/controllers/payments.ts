@@ -96,15 +96,21 @@ export const getPayments = async (req: AuthRequest, res: Response): Promise<void
 
 let payments = await prisma.payment.findMany({
   where: whereClause,
-  include: {
-    employee: {
-      select: {
-        name: true,
-        email: true,
-        department: true,
+    include: {
+      employee: {
+        select: {
+          name: true,
+          email: true,
+          department: true,
+        },
       },
+      assignment: {
+        include: {
+          authorizedItems: true,
+          assignedTo: { select: { name: true } }
+        }
+      }
     },
-  },
   orderBy: {
     createdAt: 'desc',
   },
