@@ -63,7 +63,7 @@ export const updateEmployee = async (req: Request, res: Response): Promise<void>
     }
 
     const user = await prisma.user.update({
-      where: { id: Number(id) },
+      where: { id: id as string },
       data: updateData,
       select: { id: true, name: true, email: true, role: true }
     });
@@ -78,7 +78,7 @@ export const updateEmployee = async (req: Request, res: Response): Promise<void>
 export const deleteEmployee = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    await prisma.user.delete({ where: { id: Number(id) } });
+    await prisma.user.delete({ where: { id: id as string } });
     res.json({ success: true });
   } catch (error) {
     console.error('Error deleting employee:', error);

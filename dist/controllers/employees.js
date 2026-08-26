@@ -64,7 +64,7 @@ const updateEmployee = async (req, res) => {
             updateData.password = await bcryptjs_1.default.hash(password, 10);
         }
         const user = await prisma_1.default.user.update({
-            where: { id: Number(id) },
+            where: { id: id },
             data: updateData,
             select: { id: true, name: true, email: true, role: true }
         });
@@ -79,7 +79,7 @@ exports.updateEmployee = updateEmployee;
 const deleteEmployee = async (req, res) => {
     try {
         const { id } = req.params;
-        await prisma_1.default.user.delete({ where: { id: Number(id) } });
+        await prisma_1.default.user.delete({ where: { id: id } });
         res.json({ success: true });
     }
     catch (error) {

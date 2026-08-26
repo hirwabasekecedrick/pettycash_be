@@ -30,7 +30,7 @@ export const submitPayment = async (req: AuthRequest, res: Response): Promise<vo
 
     // Get the specific assignment to check balance
     const assignment = await prisma.petitCashAssignment.findUnique({
-      where: { id: Number(assignmentId) }
+      where: { id: assignmentId }
     });
 
     if (!assignment || assignment.assignedToId !== employeeId) {

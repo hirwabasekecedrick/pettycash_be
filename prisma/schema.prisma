@@ -8,7 +8,7 @@ datasource db {
 }
 
 model User {
-  id                   Int                   @id @default(autoincrement())
+  id                   String                @id @default(cuid())
   name                 String
   email                String                @unique
   password             String
@@ -28,21 +28,21 @@ enum Role {
 }
 
 model PetitCashAssignment {
-  id              Int          @id @default(autoincrement())
+  id              String         @id @default(cuid())
   amount          Float
-  assignedToId    Int
-  assignedTo      User         @relation("AssignedTo", fields: [assignedToId], references: [id])
-  assignedById    Int
-  assignedBy      User         @relation("AssignedBy", fields: [assignedById], references: [id])
+  assignedToId    String
+  assignedTo      User           @relation("AssignedTo", fields: [assignedToId], references: [id])
+  assignedById    String
+  assignedBy      User           @relation("AssignedBy", fields: [assignedById], references: [id])
   
   authorizedItems BudgetItem[]
   payments        Payment[]
 
-  createdAt       DateTime     @default(now())
+  createdAt       DateTime       @default(now())
 }
 
 model BudgetItem {
-  id              Int                   @id @default(autoincrement())
+  id              String                @id @default(cuid())
   name            String                @unique
   assignments     PetitCashAssignment[]
   payments        Payment[]
@@ -50,20 +50,20 @@ model BudgetItem {
 }
 
 model Payment {
-  id             Int      @id @default(autoincrement())
+  id             String      @id @default(cuid())
   vendorNumber   String
   amount         Float
   reason         String
-  images         String[] // Array of local paths or URLs
-  idempotencyKey String?  @unique
+  images         String[]
+  idempotencyKey String?     @unique
   
-  employeeId     Int
-  employee       User     @relation(fields: [employeeId], references: [id])
+  employeeId     String
+  employee       User        @relation(fields: [employeeId], references: [id])
   
-  assignmentId   Int
+  assignmentId   String
   assignment     PetitCashAssignment @relation(fields: [assignmentId], references: [id])
   
-  budgetItemId   Int?
+  budgetItemId   String?
   budgetItem     BudgetItem? @relation(fields: [budgetItemId], references: [id])
 
   createdAt      DateTime @default(now())

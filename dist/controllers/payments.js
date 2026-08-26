@@ -28,7 +28,7 @@ const submitPayment = async (req, res) => {
         const paymentAmount = Number(amount);
         // Get the specific assignment to check balance
         const assignment = await prisma_1.default.petitCashAssignment.findUnique({
-            where: { id: Number(assignmentId) }
+            where: { id: assignmentId }
         });
         if (!assignment || assignment.assignedToId !== employeeId) {
             res.status(403).json({ error: 'Invalid or unauthorized assignment' });

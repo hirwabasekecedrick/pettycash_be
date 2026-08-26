@@ -10,7 +10,7 @@ export const createAssignment = async (req: AuthRequest, res: Response): Promise
     const assignment = await prisma.petitCashAssignment.create({
       data: {
         amount: Number(amount),
-        assignedToId: Number(assignedToId),
+        assignedToId: assignedToId,
         assignedById,
         authorizedItems: {
           connectOrCreate: (authorizedItems as string[] || []).map(name => ({
