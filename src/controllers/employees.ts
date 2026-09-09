@@ -13,6 +13,7 @@ function generatePassword(length = 12): string {
 export const getEmployees = async (req: Request, res: Response): Promise<void> => {
   try {
     const employees = await prisma.user.findMany({
+      where: { deletedAt: null },
       select: {
         id: true,
         name: true,
@@ -90,7 +91,10 @@ export const updateEmployee = async (req: Request, res: Response): Promise<void>
 export const deleteEmployee = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    await prisma.user.delete({ where: { id: String(id) } });
+    await prisma.user.update({
+      where: { id: String(id) },
+      data: { deletedAt: new Date() }
+    });
     res.json({ success: true });
   } catch (error) {
     console.error('Error deleting employee:', error);

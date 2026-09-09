@@ -50,6 +50,7 @@ model User {
   payments        Payment[]
   createdAt       DateTime              @default(now())
   updatedAt       DateTime              @updatedAt
+  deletedAt       DateTime?
 }
 
 enum Role {
