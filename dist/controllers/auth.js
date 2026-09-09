@@ -20,7 +20,7 @@ const login = async (req, res) => {
             res.status(401).json({ error: 'Invalid email or password' });
             return;
         }
-        const token = jsonwebtoken_1.default.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET || 'secret', { expiresIn: '1d' });
+        const token = jsonwebtoken_1.default.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1d' });
         res.json({
             token,
             user: {

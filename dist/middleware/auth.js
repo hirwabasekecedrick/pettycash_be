@@ -12,7 +12,7 @@ const authenticateToken = (req, res, next) => {
         res.status(401).json({ error: 'Access token missing' });
         return;
     }
-    jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET || 'secret', (err, user) => {
+    jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET, (err, user) => {
         if (err) {
             res.status(403).json({ error: 'Invalid token' });
             return;
