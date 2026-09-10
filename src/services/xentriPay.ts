@@ -8,6 +8,18 @@ interface PaymentRequestBody {
   amount: number;
 }
 
+interface CollectionRequestBody {
+  cname: string;
+  amount: number;
+  cnumber: string;
+  msisdn: string;
+  currency?: string;
+  pmethod?: string;
+  email: string;
+  customerRef?: string;
+  chargesIncluded?: boolean;
+}
+
 interface XentriResponse {
   [key: string]: any;
 }
@@ -92,10 +104,63 @@ export async function getPaymentStatus(customerRef: string): Promise<XentriRespo
   return xentriFetch(`/payment-requests/check-status?${qs.toString()}`, { method: 'GET' });
 }
 
-// Map a XentriPay provider status string to our internal payment status.
+export async function createCollection(body: CollectionRequestBody): Promise<XentriResponse> {
+  const payload = {
+    email: body.email,
+    cname: body.cname,
+    amount: Math.floor(body.amount), // RWF requires whole numbers only
+    cnumber: body.cnumber,
+    msisdn: body.msisdn,
+    currency: body.currency || 'RWF',
+    pmethod: body.pmethod || 'momo',
+    chargesIncluded: body.chargesIncluded ?? true,
+    ...(body.customerRef ? { customerRef: body.customerRef } : {}),
+  };
+
+  return xentriFetch('/collections/initiate', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function getCollectionStatus(refid: string): Promise<XentriResponse> {
+  const encoded = encodeURIComponent(refid);
+  return xentriFetch(`/collections/status/${encoded}`, { method: 'GET' });
+}
+
+/**
+ * Collections use the international dial format (2507XXXXXXXX) while
+ * payouts use the 10-digit local format (07XXXXXXXX).
+ * Accept either and normalise to international for the collections API.
+ */
+export function normalizeCollectionMsisdn(input: string): string {
+  const digits = String(input || '').replace(/[^\d]/g, '');
+  if (/^250\d{9}$/.test(digits)) return digits;          // already international
+  if (/^07\d{8}$/.test(digits)) return `250${digits.slice(1)}`; // local, drop leading 0: 078.. -> 2507...
+  if (/^7\d{8}$/.test(digits)) return `250${digits}`;    // no leading zero
+  throw new Error('Phone number must be 10 digits (e.g. 0788302208) or international (2507XXXXXXXX)');
+}
+
+export function normalizeLocalMsisdn(input: string): string {
+  const digits = String(input || '').replace(/[^\d]/g, '');
+  if (/^07\d{8}$/.test(digits)) return digits;                    // already local
+  if (/^2507\d{8}$/.test(digits)) return `0${digits.slice(3)}`;   // strip international prefix
+  if (/^7\d{8}$/.test(digits)) return `0${digits}`;               // no leading zero
+  throw new Error('Phone number must be 10 digits (e.g. 0788302208)');
+}
+
+// Map a XentriPay provider status string to our internal status.
 export function mapProviderStatus(providerStatus: string): 'PROCESSING' | 'SUCCESSFUL' | 'FAILED' {
   const s = String(providerStatus || '').toUpperCase();
   if (s === 'COMPLETED' || s === 'SUCCESSFUL' || s === 'SUCCESS') return 'SUCCESSFUL';
   if (s === 'FAILED' || s === 'REVERSED' || s === 'CANCELLED') return 'FAILED';
   return 'PROCESSING';
+}
+
+// Collections only report PENDING / SUCCESS / FAILED.
+export function mapCollectionStatus(providerStatus: string): 'PENDING' | 'SUCCESSFUL' | 'FAILED' {
+  const s = String(providerStatus || '').toUpperCase();
+  if (s === 'SUCCESS' || s === 'SUCCESSFUL' || s === 'COMPLETED') return 'SUCCESSFUL';
+  if (s === 'FAILED' || s === 'CANCELLED') return 'FAILED';
+  return 'PENDING';
 }

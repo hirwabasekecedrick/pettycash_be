@@ -11,6 +11,7 @@ import dashboardRoutes from './routes/dashboard';
 import budgetItemRoutes from './routes/budgetItems';
 import themeRoutes from './routes/theme';
 import walletRoutes from './routes/wallet';
+import collectionRoutes from './routes/collections';
 import { startPayoutPoller } from './tasks/payoutPoller';
 
 import helmet from 'helmet';
@@ -49,6 +50,7 @@ app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/budget-items', budgetItemRoutes);
 app.use('/api/theme', themeRoutes);
 app.use('/api/wallet', walletRoutes);
+app.use('/api/collections', collectionRoutes);
 
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 

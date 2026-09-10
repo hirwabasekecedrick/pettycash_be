@@ -7,6 +7,11 @@ export const login = async (req: Request, res: Response): Promise<void> => {
   try {
     const { email, password } = req.body;
 
+    if (!email || !password) {
+      res.status(401).json({ error: 'Email and password are required' });
+      return;
+    }
+
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user || user.deletedAt) {
       res.status(401).json({ error: 'Invalid email or password' });

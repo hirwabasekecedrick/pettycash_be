@@ -49,6 +49,7 @@ model User {
   assignedCash    PetitCashAssignment[] @relation("AssignedTo")
   assignmentsMade PetitCashAssignment[] @relation("AssignedBy")
   payments        Payment[]
+  collections     Collection[]
   createdAt       DateTime              @default(now())
   updatedAt       DateTime              @updatedAt
   deletedAt       DateTime?
@@ -62,6 +63,12 @@ enum Role {
 enum PaymentStatus {
   PENDING
   PROCESSING
+  SUCCESSFUL
+  FAILED
+}
+
+enum CollectionStatus {
+  PENDING
   SUCCESSFUL
   FAILED
 }
@@ -155,4 +162,24 @@ model WalletTransaction {
   wallet      Wallet          @relation(fields: [walletId], references: [id])
   walletId    String
   createdAt   DateTime        @default(now())
+}
+
+model Collection {
+  id              String           @id @default(uuid())
+  amount          Float
+  cnumber         String
+  msisdn          String
+  customerRef     String?          @unique
+  refid           String?
+  status          CollectionStatus @default(PENDING)
+  providerStatus  String?
+  note            String?
+  chargesIncluded Boolean          @default(true)
+
+  createdById String
+  createdBy   User   @relation(fields: [createdById], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@index([status])
 }
