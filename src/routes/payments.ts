@@ -2,7 +2,13 @@ import { Router } from 'express';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
-import { submitPayment, getPayments } from '../controllers/payments';
+import {
+  submitPayment,
+  getPayments,
+  getPaymentById,
+  triggerPayout,
+  refreshPaymentStatus,
+} from '../controllers/payments';
 import { authenticateToken } from '../middleware/auth';
 
 // Ensure uploads dir exists
@@ -30,5 +36,9 @@ router.get('/', getPayments as any);
 
 // Allow up to 5 images per payment
 router.post('/', upload.array('images', 5), submitPayment as any);
+
+router.get('/:id', getPaymentById as any);
+router.post('/:id/payout', triggerPayout as any);
+router.post('/:id/status', refreshPaymentStatus as any);
 
 export default router;

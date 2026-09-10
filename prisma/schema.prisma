@@ -15,6 +15,7 @@ model Tenant {
   budgetItems BudgetItem[]
   payments    Payment[]
   theme       Theme?
+  wallet      Wallet?
   createdAt   DateTime              @default(now())
   updatedAt   DateTime              @updatedAt
 }
@@ -58,6 +59,23 @@ enum Role {
   ACCOUNTANT
 }
 
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  SUCCESSFUL
+  FAILED
+}
+
+enum PayoutMode {
+  AUTO
+  MANUAL
+}
+
+enum WalletTxType {
+  CREDIT
+  DEBIT
+}
+
 model PetitCashAssignment {
   id           String     @id @default(uuid())
   amount       Float
@@ -92,6 +110,11 @@ model Payment {
   images         String[] // Array of local paths or URLs
   idempotencyKey String?  @unique
 
+  status         PaymentStatus @default(PENDING)
+  customerRef    String?
+  providerRef    String?
+  providerStatus String?
+
   employeeId String
   employee   User @relation(fields: [employeeId], references: [id])
 
@@ -104,5 +127,32 @@ model Payment {
   tenantId String?
   tenant   Tenant? @relation(fields: [tenantId], references: [id])
 
+  walletTransactions WalletTransaction[]
+
   createdAt DateTime @default(now())
+}
+
+model Wallet {
+  id         String    @id @default(uuid())
+  tenantId   String?   @unique
+  tenant     Tenant?   @relation(fields: [tenantId], references: [id])
+  balance    Float     @default(0)
+  currency   String    @default("RWF")
+  payoutMode PayoutMode @default(AUTO)
+  transactions WalletTransaction[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model WalletTransaction {
+  id          String          @id @default(uuid())
+  type        WalletTxType
+  amount      Float
+  description String?
+  reference   String?
+  payment     Payment?        @relation(fields: [paymentId], references: [id])
+  paymentId   String?
+  wallet      Wallet          @relation(fields: [walletId], references: [id])
+  walletId    String
+  createdAt   DateTime        @default(now())
 }

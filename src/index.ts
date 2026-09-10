@@ -10,6 +10,8 @@ import paymentRoutes from './routes/payments';
 import dashboardRoutes from './routes/dashboard';
 import budgetItemRoutes from './routes/budgetItems';
 import themeRoutes from './routes/theme';
+import walletRoutes from './routes/wallet';
+import { startPayoutPoller } from './tasks/payoutPoller';
 
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
@@ -46,6 +48,7 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/budget-items', budgetItemRoutes);
 app.use('/api/theme', themeRoutes);
+app.use('/api/wallet', walletRoutes);
 
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
@@ -57,4 +60,5 @@ const PORT = Number(process.env.PORT) || 4000;
 
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`✅ Server running on port ${PORT}`);
+  startPayoutPoller();
 });
