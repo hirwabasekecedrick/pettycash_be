@@ -1,0 +1,11 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const auth_1 = require("../middleware/auth");
+const collections_1 = require("../controllers/collections");
+const router = (0, express_1.Router)();
+router.use(auth_1.authenticateToken, auth_1.requireAccountant);
+router.get('/', collections_1.getCollections);
+router.post('/', collections_1.createCollection);
+router.post('/:id/status', collections_1.refreshCollectionStatus);
+exports.default = router;

@@ -15,6 +15,7 @@ function generatePassword(length = 12) {
 const getEmployees = async (req, res) => {
     try {
         const employees = await prisma_1.default.user.findMany({
+            where: { deletedAt: null },
             select: {
                 id: true,
                 name: true,
@@ -88,7 +89,10 @@ exports.updateEmployee = updateEmployee;
 const deleteEmployee = async (req, res) => {
     try {
         const { id } = req.params;
-        await prisma_1.default.user.delete({ where: { id: String(id) } });
+        await prisma_1.default.user.update({
+            where: { id: String(id) },
+            data: { deletedAt: new Date() }
+        });
         res.json({ success: true });
     }
     catch (error) {

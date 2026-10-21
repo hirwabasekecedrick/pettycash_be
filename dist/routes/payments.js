@@ -29,4 +29,7 @@ router.use(auth_1.authenticateToken);
 router.get('/', payments_1.getPayments);
 // Allow up to 5 images per payment
 router.post('/', upload.array('images', 5), payments_1.submitPayment);
+router.get('/:id', payments_1.getPaymentById);
+router.post('/:id/payout', payments_1.triggerPayout);
+router.post('/:id/status', payments_1.refreshPaymentStatus);
 exports.default = router;

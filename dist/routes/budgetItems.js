@@ -6,4 +6,5 @@ const budgetItems_1 = require("../controllers/budgetItems");
 const router = (0, express_1.Router)();
 router.use(auth_1.authenticateToken);
 router.get('/', budgetItems_1.getBudgetItems);
+router.post('/', budgetItems_1.createBudgetItem);
 exports.default = router;

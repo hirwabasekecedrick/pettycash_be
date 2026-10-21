@@ -48,7 +48,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.defineExtension = exports.NullsOrder = exports.QueryMode = exports.SortOrder = exports.PaymentScalarFieldEnum = exports.BudgetItemScalarFieldEnum = exports.PetitCashAssignmentScalarFieldEnum = exports.UserScalarFieldEnum = exports.ThemeScalarFieldEnum = exports.TenantScalarFieldEnum = exports.TransactionIsolationLevel = exports.ModelName = exports.AnyNull = exports.JsonNull = exports.DbNull = exports.NullTypes = exports.prismaVersion = exports.getExtensionContext = exports.Decimal = exports.Sql = exports.raw = exports.join = exports.empty = exports.sql = exports.PrismaClientValidationError = exports.PrismaClientInitializationError = exports.PrismaClientRustPanicError = exports.PrismaClientUnknownRequestError = exports.PrismaClientKnownRequestError = void 0;
+exports.defineExtension = exports.NullsOrder = exports.QueryMode = exports.SortOrder = exports.CollectionScalarFieldEnum = exports.WalletTransactionScalarFieldEnum = exports.WalletScalarFieldEnum = exports.PaymentScalarFieldEnum = exports.BudgetItemScalarFieldEnum = exports.PetitCashAssignmentScalarFieldEnum = exports.UserScalarFieldEnum = exports.ThemeScalarFieldEnum = exports.TenantScalarFieldEnum = exports.TransactionIsolationLevel = exports.ModelName = exports.AnyNull = exports.JsonNull = exports.DbNull = exports.NullTypes = exports.prismaVersion = exports.getExtensionContext = exports.Decimal = exports.Sql = exports.raw = exports.join = exports.empty = exports.sql = exports.PrismaClientValidationError = exports.PrismaClientInitializationError = exports.PrismaClientRustPanicError = exports.PrismaClientUnknownRequestError = exports.PrismaClientKnownRequestError = void 0;
 const runtime = __importStar(require("@prisma/client/runtime/client"));
 /**
  * Prisma Errors
@@ -108,7 +108,10 @@ exports.ModelName = {
     User: 'User',
     PetitCashAssignment: 'PetitCashAssignment',
     BudgetItem: 'BudgetItem',
-    Payment: 'Payment'
+    Payment: 'Payment',
+    Wallet: 'Wallet',
+    WalletTransaction: 'WalletTransaction',
+    Collection: 'Collection'
 };
 /**
  * Enums
@@ -149,7 +152,8 @@ exports.UserScalarFieldEnum = {
     role: 'role',
     tenantId: 'tenantId',
     createdAt: 'createdAt',
-    updatedAt: 'updatedAt'
+    updatedAt: 'updatedAt',
+    deletedAt: 'deletedAt'
 };
 exports.PetitCashAssignmentScalarFieldEnum = {
     id: 'id',
@@ -172,10 +176,47 @@ exports.PaymentScalarFieldEnum = {
     reason: 'reason',
     images: 'images',
     idempotencyKey: 'idempotencyKey',
+    status: 'status',
+    customerRef: 'customerRef',
+    providerRef: 'providerRef',
+    providerStatus: 'providerStatus',
     employeeId: 'employeeId',
     assignmentId: 'assignmentId',
     budgetItemId: 'budgetItemId',
     tenantId: 'tenantId',
+    createdAt: 'createdAt'
+};
+exports.WalletScalarFieldEnum = {
+    id: 'id',
+    tenantId: 'tenantId',
+    balance: 'balance',
+    currency: 'currency',
+    payoutMode: 'payoutMode',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+};
+exports.WalletTransactionScalarFieldEnum = {
+    id: 'id',
+    type: 'type',
+    amount: 'amount',
+    description: 'description',
+    reference: 'reference',
+    paymentId: 'paymentId',
+    walletId: 'walletId',
+    createdAt: 'createdAt'
+};
+exports.CollectionScalarFieldEnum = {
+    id: 'id',
+    amount: 'amount',
+    cnumber: 'cnumber',
+    msisdn: 'msisdn',
+    customerRef: 'customerRef',
+    refid: 'refid',
+    status: 'status',
+    providerStatus: 'providerStatus',
+    note: 'note',
+    chargesIncluded: 'chargesIncluded',
+    createdById: 'createdById',
     createdAt: 'createdAt'
 };
 exports.SortOrder = {

@@ -10,8 +10,12 @@ const prisma_1 = __importDefault(require("../utils/prisma"));
 const login = async (req, res) => {
     try {
         const { email, password } = req.body;
+        if (!email || !password) {
+            res.status(401).json({ error: 'Email and password are required' });
+            return;
+        }
         const user = await prisma_1.default.user.findUnique({ where: { email } });
-        if (!user) {
+        if (!user || user.deletedAt) {
             res.status(401).json({ error: 'Invalid email or password' });
             return;
         }

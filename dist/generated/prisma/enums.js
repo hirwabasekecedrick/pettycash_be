@@ -9,8 +9,27 @@
 * 🟢 You can import this file directly.
 */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Role = void 0;
+exports.WalletTxType = exports.PayoutMode = exports.CollectionStatus = exports.PaymentStatus = exports.Role = void 0;
 exports.Role = {
     EMPLOYEE: 'EMPLOYEE',
     ACCOUNTANT: 'ACCOUNTANT'
+};
+exports.PaymentStatus = {
+    PENDING: 'PENDING',
+    PROCESSING: 'PROCESSING',
+    SUCCESSFUL: 'SUCCESSFUL',
+    FAILED: 'FAILED'
+};
+exports.CollectionStatus = {
+    PENDING: 'PENDING',
+    SUCCESSFUL: 'SUCCESSFUL',
+    FAILED: 'FAILED'
+};
+exports.PayoutMode = {
+    AUTO: 'AUTO',
+    MANUAL: 'MANUAL'
+};
+exports.WalletTxType = {
+    CREDIT: 'CREDIT',
+    DEBIT: 'DEBIT'
 };
